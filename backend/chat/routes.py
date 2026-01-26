@@ -7,9 +7,6 @@ from database import chats_collection
 
 router = APIRouter()
 
-# Ask AI
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse # Import zaroori hai
 
 @router.post("/ai/ask")
 def ask_ai_route(data: AskAISchema, user: dict | None = Depends(get_optional_user)):

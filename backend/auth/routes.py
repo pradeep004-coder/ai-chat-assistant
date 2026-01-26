@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from auth.schemas import SignupSchema, LoginSchema
 from auth.utils import create_token
 from database import users_collection
-from datetime import datetime
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -18,7 +18,10 @@ def signup(data: SignupSchema):
     })
     
     token = create_token(result.inserted_id)
-    return {"token": token}
+    return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={"token": token}
+        )
 
 @router.post("/login")
 def login(data: LoginSchema):

@@ -4,6 +4,8 @@ from dependencies import get_optional_user, get_current_user
 from ai.ai_service import ask_ai
 from fastapi.responses import JSONResponse
 from database import chats_collection
+from datetime import datetime
+
 
 router = APIRouter()
 
@@ -17,7 +19,7 @@ def ask_ai_route(data: AskAISchema, user: dict | None = Depends(get_optional_use
             "userId": user["_id"],
             "question": data.question,
             "answer": answer,
-            "timestamp": data.timestamp
+            "timestamp": datetime.fromtimestamp(data.timestamp / 1000)
         })
         # Jab data save ho jaye (User logged in)
         return JSONResponse(
@@ -34,32 +36,35 @@ def ask_ai_route(data: AskAISchema, user: dict | None = Depends(get_optional_use
 # Get chats with pagination
 @router.get("/getchats/{offset}")
 def get_chats(offset: int, user: dict = Depends(get_current_user)):
-    all_chats = list(
+   PAGE_SIZE = 10
+   total = chats_collection.count_documents({"userId": user["_id"]})
+   if offset >= total:
+        raise HTTPException(status_code=404, detail="No more chats")
+
+   cursor = (
         chats_collection
         .find({"userId": user["_id"]})
         .sort("timestamp", -1)
-    )
+        .skip(offset)
+        .limit(PAGE_SIZE)
+   )
 
-    total = len(all_chats)
-    if offset >= total:
-        raise HTTPException(status_code=404, detail="No more chats")
-  
-    start = offset
-    end = offset + 10  # slicing end is exclusive
-
-    sliced = all_chats[start:end]
-
-    chats = [
+   chats = [
         {
             "question": c["question"],
             "answer": c["answer"],
             "timestamp": c["timestamp"]
         }
-        for c in sliced
-    ]
+        for c in cursor
+   ]
 
-    can_load_more = end < total
-    return {
+   print(type(chats[0]["timestamp"]))
+   for i in chats:
+       print(i["timestamp"])
+
+   can_load_more = offset + PAGE_SIZE < total
+   print("canLoadMore: ", can_load_more)
+   return {
         "chats": chats,
         "canLoadMore": can_load_more
-    }
+   }

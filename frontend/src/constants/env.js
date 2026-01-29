@@ -1,1 +1,1 @@
-export const Backend_API = "http://localhost:8000/api";
+export const Backend_API = "https://queryflow-backend-cq7z.onrender.com/api";

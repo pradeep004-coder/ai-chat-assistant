@@ -88,6 +88,8 @@ export default function Home() {
   }
 
   const askQuestion = async () => {
+    if (!isLoggedIn) return toast.warning("Please login or signup to enable service!!");
+    
     const trimmed = query.trim();
     if (!trimmed) return;
 
